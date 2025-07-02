@@ -1,6 +1,4 @@
 ﻿// StartPilotDemo: Simple C# .NET console demo
-using System.Collections;
-
 
 internal class Program
 {
