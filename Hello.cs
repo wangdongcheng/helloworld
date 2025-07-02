@@ -4,7 +4,7 @@ class Hello
     {
         foreach (string arg in args)
         {
-            Console.WriteLine(arg);
+            Console.WriteLine("arg display:" + arg);
         }
     }
 }
