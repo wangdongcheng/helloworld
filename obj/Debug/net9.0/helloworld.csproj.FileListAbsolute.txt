@@ -12,3 +12,4 @@ c:\Github\helloworld\obj\Debug\net9.0\refint\helloworld.dll
 c:\Github\helloworld\obj\Debug\net9.0\helloworld.pdb
 c:\Github\helloworld\obj\Debug\net9.0\helloworld.genruntimeconfig.cache
 c:\Github\helloworld\obj\Debug\net9.0\ref\helloworld.dll
+c:\Github\helloworld\obj\Debug\net9.0\helloworld.sourcelink.json
