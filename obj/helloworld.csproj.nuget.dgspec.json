@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Github\\helloworld\\helloworld.csproj": {}
+    "c:\\Github\\helloworld\\helloworld.csproj": {}
   },
   "projects": {
-    "C:\\Github\\helloworld\\helloworld.csproj": {
+    "c:\\Github\\helloworld\\helloworld.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Github\\helloworld\\helloworld.csproj",
+        "projectUniqueName": "c:\\Github\\helloworld\\helloworld.csproj",
         "projectName": "helloworld",
-        "projectPath": "C:\\Github\\helloworld\\helloworld.csproj",
+        "projectPath": "c:\\Github\\helloworld\\helloworld.csproj",
         "packagesPath": "C:\\Users\\paulw\\.nuget\\packages\\",
-        "outputPath": "C:\\Github\\helloworld\\obj\\",
+        "outputPath": "c:\\Github\\helloworld\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\paulw\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -43,6 +43,12 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
+          "dependencies": {
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.9.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
