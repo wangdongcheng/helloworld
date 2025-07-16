@@ -3,11 +3,5 @@
         "name": "VJSCL",
         "server": "VJSERVER03",
         "id": "sa"
-    },
-    "tablenames": [
-        "STK_STOCK",
-        "STK_STOCK_2",
-        "STK_STOCK3",
-        "STK_STOCK4"
-    ]
+    }
 }
