@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "b8gsEvotcLE=",
+  "dgSpecHash": "z7hYS/9h6e4=",
   "success": true,
-  "projectFilePath": "c:\\Github\\helloworld\\helloworld.csproj",
+  "projectFilePath": "C:\\Github\\helloworld\\helloworld.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\paulw\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\paulw\\.nuget\\packages\\runtime.native.system.data.sqlclient.sni\\4.4.0\\runtime.native.system.data.sqlclient.sni.4.4.0.nupkg.sha512",

@@ -1,2 +1,3 @@
 /bin/*
 /obj/debug/*
+obj/project.nuget.cache
