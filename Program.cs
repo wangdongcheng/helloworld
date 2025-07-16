@@ -1,17 +1,50 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.SqlClient;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 class Program
 {
+    /// <summary>
+    /// 从指定路径的JSON文件中，根据key返回对应的value。
+    /// </summary>
+    /// <param name="jsonFilePath">JSON文件路径</param>
+    /// <param name="key">要查找的key</param>
+    /// <returns>对应的value字符串，找不到返回null</returns>
+    // public static Config? GetJsonValue(string jsonFilePath, string key)
+    // {
+    //     if (string.IsNullOrEmpty(jsonFilePath) || string.IsNullOrEmpty(key))
+    //         return null;
+    //     try
+    //     {
+    //         var jsonText = System.IO.File.ReadAllText(jsonFilePath);
+    //         var jObj = JObject.Parse(jsonText);
+    //         // 支持嵌套key（如 a.b.c）
+    //         var token = jObj.SelectToken(key);
+    //         // return token?.ToString();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"GetJsonValue error: {ex.Message}");
+    //         return null;
+    //     }
+    // }
+
     static void Main()
     {
+
+        // var databaseObj = new Database();
+        // databaseObj = GetJsonValue("..\\..\\..\\config.json", "database");
         string searchValue = "MAIN DIV"; // value to search for
-        string Database = "VJSCL"; // database name
-        // Connection string to the SQL Server database
-        string connectionString = $"Server=VJSERVER03;Database={Database};User Id=sa;Password=net1032;";
+        // string Database = databaseObj.Name; // database name
+                                   // Connection string to the SQL Server database
+        Console.WriteLine("Please enter the database password:");                                   
+        string Password = Console.ReadLine();
+        string connectionString = $"Server=VJSERVER03;Database=VJSCL;User Id=sa;Password={Password};";
         string tableName = "";       // table name
         var tablenames = new List<string>();
         // tablenames.Add("SL_ACC_TEMP");
