@@ -47,14 +47,14 @@ class Program
         string Password = Console.ReadLine();
         string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password={Password};";
         string tableName = "";       // table name
-        var tablenames = new List<string>();
+        var TabNameList = new List<string>();
         // tablenames.Add("SL_ACC_TEMP");
-        tablenames.Add("STK_STOCK");
-        tablenames.Add("STK_STOCK_2");
-        tablenames.Add("STK_STOCK3");
-        tablenames.Add("STK_STOCK4");
+        TabNameList.Add("STK_STOCK");
+        TabNameList.Add("STK_STOCK_2");
+        TabNameList.Add("STK_STOCK3");
+        TabNameList.Add("STK_STOCK4");
 
-        var matchingColumns = FindMatchingColumns(connectionString, tableName, searchValue, tablenames);
+        var matchingColumns = FindMatchingColumns(connectionString, tableName, searchValue, TabNameList);
 
         Console.WriteLine($"the columns that contain the value {searchValue} in table {tableName}:");
         foreach (var col in matchingColumns)
@@ -63,13 +63,13 @@ class Program
         }
     }
 
-    static List<string> FindMatchingColumns(string connStr, string tableName, string searchValue, List<string> tablenames)
+    static List<string> FindMatchingColumns(string connStr, string tableName, string searchValue, List<string> tabNameList)
     {
         var matchingColumns = new List<string>();
         using (var conn = new SqlConnection(connStr))
         {
             conn.Open();
-            foreach (string tab in tablenames)
+            foreach (string tab in tabNameList)
             {
                 tableName = tab; // Set the current table name
                 // get column names
