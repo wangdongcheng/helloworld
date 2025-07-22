@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
+﻿// using System;
+// using System.Collections;
+// using System.Collections.Generic;
+// using System.ComponentModel.DataAnnotations.Schema;
+// using System.Data;
 using System.Data.SqlClient;
-using Newtonsoft.Json;
+// using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Reflection;
 
 class Program
 {
@@ -37,13 +38,14 @@ class Program
 
     static void Main()
     {
-
-        // var databaseObj = new Database();
-        var databaseObj = GetJsonValue("..\\..\\..\\config.json", "database");
+        string currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+        string configPath = Path.Combine(currentDirectory, @"..\..\..\config.json");
+        configPath = Path.GetFullPath(configPath);
+        var databaseObj = GetJsonValue(configPath, "database");
         string searchValue = "MAIN DIV"; // value to search for
-        // string Database = databaseObj.Name; // database name
-                                   // Connection string to the SQL Server database
-        Console.WriteLine("Please enter the database password:");                                   
+                                         // string Database = databaseObj.Name; // database name
+                                         // Connection string to the SQL Server database
+        Console.WriteLine("Please enter the database password:");
         string Password = Console.ReadLine();
         string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password={Password};";
         string tableName = "";       // table name
