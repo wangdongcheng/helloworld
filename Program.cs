@@ -38,13 +38,13 @@ class Program
 
     static void Main()
     {
-        string searchValue = "50tender"; // value to search for
+
 
         string currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         string configPath = Path.Combine(currentDirectory, @"..\..\..\config.json");
         configPath = Path.GetFullPath(configPath);
         var databaseObj = GetJsonValue(configPath, "database");
-        
+
         Console.WriteLine("Please enter the last 4 digits of database password:");
         string Password = Console.ReadLine();
         string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password=net{Password};";
@@ -58,15 +58,22 @@ class Program
         TabNameList.Add("STK_DETAIL_PLUGINS_DATETIME");
         TabNameList.Add("STK_DETAIL_PLUGINS_VCHAR");
 
-        var matchingColumns = FindMatchingColumns(connectionString, tableName, searchValue, TabNameList);
-
-        Console.WriteLine($"the columns that contain the value {searchValue} in table {tableName}:");
-        foreach (var col in matchingColumns)
+        Console.WriteLine("Please input the value of the field to search:");
+        string searchValue = Console.ReadLine(); // value to search for
+        while (!string.IsNullOrEmpty(searchValue) && searchValue != "!exit")
         {
-            Console.WriteLine(col);
-        }
-    }
+            var matchingColumns = FindMatchingColumns(connectionString, tableName, searchValue, TabNameList);
 
+            Console.WriteLine($"the columns that contain the value {searchValue} in table {tableName}:");
+            foreach (var col in matchingColumns)
+            {
+                Console.WriteLine(col);
+            }
+            Console.WriteLine("Please input the value of the field to search:");
+            searchValue = Console.ReadLine();
+        }
+        Console.WriteLine("Exit the program.");
+    }
     static List<string> FindMatchingColumns(string connStr, string tableName, string searchValue, List<string> tabNameList)
     {
         var matchingColumns = new List<string>();
