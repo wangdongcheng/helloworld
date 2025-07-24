@@ -38,16 +38,16 @@ class Program
 
     static void Main()
     {
+        string searchValue = "50tender"; // value to search for
+
         string currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         string configPath = Path.Combine(currentDirectory, @"..\..\..\config.json");
         configPath = Path.GetFullPath(configPath);
         var databaseObj = GetJsonValue(configPath, "database");
-        string searchValue = "MAIN DIV"; // value to search for
-                                         // string Database = databaseObj.Name; // database name
-                                         // Connection string to the SQL Server database
-        Console.WriteLine("Please enter the database password:");
+        
+        Console.WriteLine("Please enter the last 4 digits of database password:");
         string Password = Console.ReadLine();
-        string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password={Password};";
+        string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password=net{Password};";
         string tableName = "";       // table name
         var TabNameList = new List<string>();
         // tablenames.Add("SL_ACC_TEMP");
@@ -55,6 +55,8 @@ class Program
         TabNameList.Add("STK_STOCK_2");
         TabNameList.Add("STK_STOCK3");
         TabNameList.Add("STK_STOCK4");
+        TabNameList.Add("STK_DETAIL_PLUGINS_DATETIME");
+        TabNameList.Add("STK_DETAIL_PLUGINS_VCHAR");
 
         var matchingColumns = FindMatchingColumns(connectionString, tableName, searchValue, TabNameList);
 
