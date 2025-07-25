@@ -16,7 +16,7 @@ class Program
     /// <param name="jsonFilePath">JSON文件路径</param>
     /// <param name="key">要查找的key</param>
     /// <returns>对应的value字符串，找不到返回null</returns>
-    public static Database? GetJsonValue(string jsonFilePath, string key)
+    static Database? GetDatabase(string jsonFilePath, string key)
     {
         if (string.IsNullOrEmpty(jsonFilePath) || string.IsNullOrEmpty(key))
             return null;
@@ -31,32 +31,43 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"GetJsonValue error: {ex.Message}");
+            Console.WriteLine($"Get database error: {ex.Message}");
             return null;
         }
     }
 
-    static void Main()
+    static List<string> GetTableNames(string jsonFilePath, string key)
     {
+        if (string.IsNullOrEmpty(jsonFilePath) || string.IsNullOrEmpty(key))
+            return new List<string>();
+        try
+        {
+            var jsonText = System.IO.File.ReadAllText(jsonFilePath);
+            var jObj = JObject.Parse(jsonText);
+            // 支持嵌套key（如 a.b.c）
+            var token = jObj.SelectToken(key);
+            return token?.ToObject<List<string>>() ?? new List<string>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Get table names error: {ex.Message}");
+            return new List<string>();
+        }
+    }
 
 
+    public static void Main()
+    {
         string currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         string configPath = Path.Combine(currentDirectory, @"..\..\..\config.json");
         configPath = Path.GetFullPath(configPath);
-        var databaseObj = GetJsonValue(configPath, "database");
+        var databaseObj = GetDatabase(configPath, "database");
 
         Console.WriteLine("Please enter the last 4 digits of database password:");
         string Password = Console.ReadLine();
         string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password=net{Password};";
         string tableName = "";       // table name
-        var TabNameList = new List<string>();
-        // tablenames.Add("SL_ACC_TEMP");
-        TabNameList.Add("STK_STOCK");
-        TabNameList.Add("STK_STOCK_2");
-        TabNameList.Add("STK_STOCK3");
-        TabNameList.Add("STK_STOCK4");
-        TabNameList.Add("STK_DETAIL_PLUGINS_DATETIME");
-        TabNameList.Add("STK_DETAIL_PLUGINS_VCHAR");
+        var TabNameList = GetTableNames(configPath, "searchtables");
 
         Console.WriteLine("Please input the value of the field to search:");
         string searchValue = Console.ReadLine(); // value to search for

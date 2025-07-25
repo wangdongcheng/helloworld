@@ -3,5 +3,13 @@
         "name": "VJSPTEST",
         "server": "VJSERVER03",
         "id": "sa"
-    }
+    },
+    "searchtables": [
+        "STK_STOCK",
+        "STK_STOCK_2",
+        "STK_STOCK3",
+        "STK_STOCK4",
+        "STK_DETAIL_PLUGINS_DATETIME",
+        "STK_DETAIL_PLUGINS_VCHAR"
+    ]
 }
