@@ -5,11 +5,22 @@
         "id": "sa"
     },
     "searchtables": [
-        "STK_STOCK",
-        "STK_STOCK_2",
-        "STK_STOCK3",
-        "STK_STOCK4",
-        "STK_DETAIL_PLUGINS_DATETIME",
-        "STK_DETAIL_PLUGINS_VCHAR"
+        "PL_ACCOUNTS",
+        "PL_ACCOUNTS2",
+        "PL_ADDRESSES",
+        "PL_ALLOC_HISTORY",
+        "PL_ALLOCATION_TEMP",
+        "PL_ANALYSIS",
+        "PL_ANALYSIS2",
+        "PL_BACS_FORMATS",
+        "PL_DETAIL_PLUGINS_DATETIME",
+        "PL_DETAIL_PLUGINS_VCHAR",
+        "PL_LANDED_SUBANAL_TEMP",
+        "PL_LANDED_TRN_TEMP",
+        "PL_REMITTANCE_DETAIL",
+        "PL_REMITTANCE_HEADER",
+        "PL_TRANSACTION_NOTES",
+        "PL_TRANSACTIONS",
+        "PL_TRANSACTIONS2"
     ]
 }
