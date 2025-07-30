@@ -1,6 +1,6 @@
 {
     "database": {
-        "name": "VJSPTEST",
+        "name": "VJSP",
         "server": "VJSERVER03",
         "id": "sa"
     },
