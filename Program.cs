@@ -1,163 +1,335 @@
-﻿// using System;
-// using System.Collections;
-// using System.Collections.Generic;
-// using System.ComponentModel.DataAnnotations.Schema;
-// using System.Data;
+using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
-// using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+
+// Configuration models
+public class Database
+{
+    public string Server { get; set; }
+    public string Name { get; set; }
+    public string Id { get; set; }
+}
+
+public class SearchResult
+{
+    public string TableName { get; set; }
+    public string ColumnName { get; set; }
+    public object Value { get; set; }
+    
+    public override string ToString() => $"{TableName}:{ColumnName} = {Value}";
+}
 
 class Program
 {
-    /// <summary>
-    /// 从指定路径的JSON文件中，根据key返回对应的value。
-    /// </summary>
-    /// <param name="jsonFilePath">JSON文件路径</param>
-    /// <param name="key">要查找的key</param>
-    /// <returns>对应的value字符串，找不到返回null</returns>
-    static Database? GetDatabase(string jsonFilePath, string key)
+    private static readonly string ConfigFileName = "config.json";
+    
+    public static async Task Main()
     {
-        if (string.IsNullOrEmpty(jsonFilePath) || string.IsNullOrEmpty(key))
-            return null;
         try
         {
-            var jsonText = System.IO.File.ReadAllText(jsonFilePath);
-            var jObj = JObject.Parse(jsonText);
-            // 支持嵌套key（如 a.b.c）
-            var token = jObj.SelectToken(key);
-            return token?.ToObject<Database>();
-            // return token?.ToString();
+            var configPath = GetConfigPath();
+            var databaseConfig = GetConfiguration<Database>(configPath, "database");
+            var tableNames = GetConfiguration<List<string>>(configPath, "searchtables");
+            
+            if (databaseConfig == null || tableNames == null || !tableNames.Any())
+            {
+                Console.WriteLine("Failed to load configuration. Please check config.json file.");
+                return;
+            }
+
+            var connectionString = await GetConnectionStringAsync(databaseConfig);
+            if (string.IsNullOrEmpty(connectionString))
+                return;
+
+            await RunSearchLoopAsync(connectionString, tableNames);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Get database error: {ex.Message}");
+            Console.WriteLine($"Application error: {ex.Message}");
+        }
+    }
+
+    private static string GetConfigPath()
+    {
+        var currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+        var configPath = Path.Combine(currentDirectory ?? "", "..", "..", "..", ConfigFileName);
+        return Path.GetFullPath(configPath);
+    }
+
+    private static T GetConfiguration<T>(string jsonFilePath, string key) where T : class
+    {
+        if (string.IsNullOrEmpty(jsonFilePath) || string.IsNullOrEmpty(key))
+            return null;
+
+        try
+        {
+            if (!File.Exists(jsonFilePath))
+            {
+                Console.WriteLine($"Configuration file not found: {jsonFilePath}");
+                return null;
+            }
+
+            var jsonText = File.ReadAllText(jsonFilePath);
+            var jObj = JObject.Parse(jsonText);
+            var token = jObj.SelectToken(key);
+            return token?.ToObject<T>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading configuration '{key}': {ex.Message}");
             return null;
         }
     }
 
-    static List<string> GetTableNames(string jsonFilePath, string key)
+    private static async Task<string> GetConnectionStringAsync(Database databaseConfig)
     {
-        if (string.IsNullOrEmpty(jsonFilePath) || string.IsNullOrEmpty(key))
-            return new List<string>();
-        try
-        {
-            var jsonText = System.IO.File.ReadAllText(jsonFilePath);
-            var jObj = JObject.Parse(jsonText);
-            // 支持嵌套key（如 a.b.c）
-            var token = jObj.SelectToken(key);
-            return token?.ToObject<List<string>>() ?? new List<string>();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Get table names error: {ex.Message}");
-            return new List<string>();
-        }
-    }
-
-
-    public static void Main()
-    {
-        string currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-        string configPath = Path.Combine(currentDirectory, @"..\..\..\config.json");
-        configPath = Path.GetFullPath(configPath);
-        var databaseObj = GetDatabase(configPath, "database");
-
         Console.WriteLine("Please enter the last 4 digits of database password:");
-        string Password = Console.ReadLine();
-        string connectionString = $"Server={databaseObj.Server};Database={databaseObj.Name};User Id={databaseObj.Id};Password=net{Password};";
-        string tableName = "";       // table name
-        var TabNameList = GetTableNames(configPath, "searchtables");
-
-        Console.WriteLine("Please input the value of the field to search:");
-        string searchValue = Console.ReadLine(); // value to search for
-        while (!string.IsNullOrEmpty(searchValue) && searchValue != "!exit")
+        var password = Console.ReadLine();
+        
+        if (string.IsNullOrWhiteSpace(password))
         {
-            var matchingColumns = FindMatchingColumns(connectionString, tableName, searchValue, TabNameList);
-
-            Console.WriteLine($"the columns that contain the value {searchValue} in table {tableName}:");
-            foreach (var col in matchingColumns)
-            {
-                Console.WriteLine(col);
-            }
-            Console.WriteLine("Please input the value of the field to search:");
-            searchValue = Console.ReadLine();
+            Console.WriteLine("Password cannot be empty.");
+            return null;
         }
-        Console.WriteLine("Exit the program.");
+
+        var connectionString = $"Server={databaseConfig.Server};Database={databaseConfig.Name};" +
+                              $"User Id={databaseConfig.Id};Password=net{password};" +
+                              $"Connection Timeout=30;";
+
+        // Test connection
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            Console.WriteLine("Database connection successful!");
+            return connectionString;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to connect to database: {ex.Message}");
+            return null;
+        }
     }
-    static List<string> FindMatchingColumns(string connStr, string tableName, string searchValue, List<string> tabNameList)
+
+    private static async Task RunSearchLoopAsync(string connectionString, List<string> tableNames)
     {
-        var matchingColumns = new List<string>();
-        using (var conn = new SqlConnection(connStr))
+        Console.WriteLine("Please input the value to search for (type '!exit' or press ctrl+c to quit):");
+        
+        string searchValue;
+        while (!string.IsNullOrEmpty(searchValue = Console.ReadLine()) && searchValue != "!exit")
         {
-            conn.Open();
-            foreach (string tab in tabNameList)
+            try
             {
-                tableName = tab; // Set the current table name
-                // get column names
-                string getColumnsCmd = @"
-                SELECT COLUMN_NAME 
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE TABLE_NAME = @TableName";
-
-                var columnNames = new List<string>();
-
-                using (var cmd = new SqlCommand(getColumnsCmd, conn))
+                var results = await FindMatchingColumnsAsync(connectionString, searchValue, tableNames);
+                
+                if (results.Any())
                 {
-                    cmd.Parameters.AddWithValue("@TableName", tableName);
-                    using (var reader = cmd.ExecuteReader())
+                    Console.WriteLine($"\nFound {results.Count} matches for '{searchValue}':");
+                    foreach (var result in results.Take(50)) // Limit output
                     {
-                        while (reader.Read())
-                        {
-                            columnNames.Add(reader.GetString(0));
-                        }
+                        Console.WriteLine($"  {result}");
                     }
+                    
+                    if (results.Count > 50)
+                        Console.WriteLine($"  ... and {results.Count - 50} more results (showing first 50)");
                 }
-
-                // select columns with LIKE condition
-                var likeConditions = new List<string>();
-                foreach (var col in columnNames)
+                else
                 {
-                    if (col.Contains("DATE"))  // Check if the column name contains "date"
-                    {
-                        likeConditions.Add($"CONVERT(VARCHAR, [{col}], 23) LIKE @SearchPattern");
-                    }
-                    likeConditions.Add($"[{col}] LIKE @SearchPattern");
+                    Console.WriteLine($"No matches found for '{searchValue}'");
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Search error: {ex.Message}");
+            }
+            
+            Console.WriteLine("\nPlease input the value to search for (type '!exit' or press ctrl+c to quit):");
+        }
+        
+        Console.WriteLine("Exiting program...");
+    }
 
-                string whereClause = string.Join(" OR ", likeConditions);
-                string searchSql = $"SELECT TOP 10 * FROM [{tableName}] WHERE {whereClause}";
+    private static async Task<List<SearchResult>> FindMatchingColumnsAsync(
+        string connectionString, 
+        string searchValue, 
+        List<string> tableNames)
+    {
+        var results = new List<SearchResult>();
+        
+        // Process tables sequentially to avoid connection conflicts
+        foreach (var tableName in tableNames)
+        {
+            var tableResults = await SearchTableAsync(connectionString, tableName, searchValue);
+            results.AddRange(tableResults);
+        }
 
-                using (var cmd = new SqlCommand(searchSql, conn))
+        return results.Distinct().ToList();
+    }
+
+    private static async Task<List<SearchResult>> SearchTableAsync(
+        string connectionString, 
+        string tableName, 
+        string searchValue)
+    {
+        var results = new List<SearchResult>();
+        
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            
+            // Get column information with data types
+            var columns = await GetTableColumnsAsync(connection, tableName);
+            if (!columns.Any())
+                return results;
+
+            // Build dynamic search query
+            var searchConditions = BuildSearchConditions(columns, searchValue);
+            if (!searchConditions.Any())
+                return results;
+
+            var query = $@"
+                SELECT TOP 10 {string.Join(", ", columns.Select(c => $"[{c.Name}]"))}
+                FROM [{tableName}] 
+                WHERE {string.Join(" OR ", searchConditions)}";
+
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@SearchValue", searchValue);
+            command.Parameters.AddWithValue("@SearchPattern", $"%{searchValue}%");
+            command.CommandTimeout = 60; // Set command timeout here
+
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (await reader.ReadAsync())
+            {
+                for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    cmd.Parameters.AddWithValue("@SearchPattern", $"{searchValue}");
-
-                    using (var reader = cmd.ExecuteReader())
+                    var columnName = reader.GetName(i);
+                    var value = reader.GetValue(i);
+                    
+                    if (value != DBNull.Value && ValueContainsSearch(value, searchValue, columnName))
                     {
-                        if (reader.Read())
+                        results.Add(new SearchResult
                         {
-                            foreach (var col in columnNames)
-                            {
-                                var val = reader[col];
-                                if (val != DBNull.Value && val.ToString().Contains(searchValue, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    matchingColumns.Add($"{tableName}:{col}");
-                                }
-                                else if (col.Contains("DATE") && DateTime.TryParse(val.ToString(), out DateTime dateValue))
-                                {
-                                    // Check if the date matches the search value
-                                    if (dateValue.ToString("yyyy-MM-dd").Contains(searchValue))
-                                    {
-                                        matchingColumns.Add($"{tableName}:{col}");
-                                    }
-                                }
-                            }
-                        }
+                            TableName = tableName,
+                            ColumnName = columnName,
+                            Value = value
+                        });
                     }
                 }
             }
-            conn.Close();
-            return matchingColumns;
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching table {tableName}: {ex.Message}");
+        }
+
+        return results;
+    }
+
+    private static async Task<List<(string Name, string DataType)>> GetTableColumnsAsync(
+        SqlConnection connection, 
+        string tableName)
+    {
+        var columns = new List<(string Name, string DataType)>();
+        
+        const string query = @"
+            SELECT COLUMN_NAME, DATA_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = @TableName
+            ORDER BY ORDINAL_POSITION";
+
+        using var command = new SqlCommand(query, connection);
+        command.Parameters.AddWithValue("@TableName", tableName);
+        command.CommandTimeout = 30; // Set command timeout
+        
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            columns.Add((
+                reader.GetString(0), // COLUMN_NAME
+                reader.GetString(1)  // DATA_TYPE
+            ));
+        }
+
+        return columns;
+    }
+
+    private static List<string> BuildSearchConditions(
+        List<(string Name, string DataType)> columns, 
+        string searchValue)
+    {
+        var conditions = new List<string>();
+        
+        foreach (var (name, dataType) in columns)
+        {
+            switch (dataType.ToLower())
+            {
+                case "varchar":
+                case "nvarchar":
+                case "char":
+                case "nchar":
+                case "text":
+                case "ntext":
+                    conditions.Add($"[{name}] LIKE @SearchPattern");
+                    break;
+                    
+                case "date":
+                case "datetime":
+                case "datetime2":
+                case "smalldatetime":
+                    if (DateTime.TryParse(searchValue, out _) || 
+                        searchValue.Length >= 4) // Year search
+                    {
+                        conditions.Add($"CONVERT(VARCHAR, [{name}], 23) LIKE @SearchPattern");
+                    }
+                    break;
+                    
+                case "int":
+                case "bigint":
+                case "smallint":
+                case "tinyint":
+                    if (int.TryParse(searchValue, out _))
+                    {
+                        conditions.Add($"[{name}] = @SearchValue");
+                    }
+                    break;
+                    
+                case "decimal":
+                case "numeric":
+                case "float":
+                case "real":
+                    if (decimal.TryParse(searchValue, out _))
+                    {
+                        conditions.Add($"[{name}] = @SearchValue");
+                    }
+                    break;
+            }
+        }
+        
+        return conditions;
+    }
+
+    private static bool ValueContainsSearch(object value, string searchValue, string columnName)
+    {
+        if (value == null || value == DBNull.Value)
+            return false;
+
+        var stringValue = value.ToString();
+        
+        // Handle date columns specially
+        if (columnName.ToUpper().Contains("DATE") && value is DateTime dateValue)
+        {
+            return dateValue.ToString("yyyy-MM-dd").Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
+                   dateValue.ToString("MM/dd/yyyy").Contains(searchValue, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        return stringValue.Contains(searchValue, StringComparison.OrdinalIgnoreCase);
     }
 }
