@@ -1,26 +1,19 @@
 {
     "database": {
-        "name": "VJSP",
+        "name": "VJSCLTest",
         "server": "VJSERVER03",
         "id": "sa"
     },
     "searchtables": [
-        "PL_ACCOUNTS",
-        "PL_ACCOUNTS2",
-        "PL_ADDRESSES",
-        "PL_ALLOC_HISTORY",
-        "PL_ALLOCATION_TEMP",
-        "PL_ANALYSIS",
-        "PL_ANALYSIS2",
-        "PL_BACS_FORMATS",
-        "PL_DETAIL_PLUGINS_DATETIME",
-        "PL_DETAIL_PLUGINS_VCHAR",
-        "PL_LANDED_SUBANAL_TEMP",
-        "PL_LANDED_TRN_TEMP",
-        "PL_REMITTANCE_DETAIL",
-        "PL_REMITTANCE_HEADER",
-        "PL_TRANSACTION_NOTES",
-        "PL_TRANSACTIONS",
-        "PL_TRANSACTIONS2"
+        "ARM_CM_SL_PL_NL_DETAIL",
+        "ARM_CM_SL_PL_NL_DETAIL2",
+        "SDK_SL_PL_CONTRA_RECS",
+        "SDK_SL_PL_SCHEDULE",
+        "SDK_SL_PL_SETTINGS",
+        "SL_PL_ALLOC_CORRECT_TEMP",
+        "SL_PL_NL_DETAIL",
+        "SL_PL_NL_DETAIL_ACCRUALS",
+        "SL_PL_NL_DETAIL2",
+        "SL_PL_STATEMENTS_TEMP"
     ]
 }
