@@ -89,7 +89,7 @@ class Program
 
     private static async Task<string> GetConnectionStringAsync(Database databaseConfig)
     {
-        Console.WriteLine("Please enter the last 4 digits of database password:");
+        Console.WriteLine("Please enter database password:");
         var password = Console.ReadLine();
         
         if (string.IsNullOrWhiteSpace(password))
@@ -99,7 +99,7 @@ class Program
         }
 
         var connectionString = $"Server={databaseConfig.Server};Database={databaseConfig.Name};" +
-                              $"User Id={databaseConfig.Id};Password=net{password};" +
+                              $"User Id={databaseConfig.Id};Password={password};" +
                               $"Connection Timeout=30;";
 
         // Test connection
